@@ -1,0 +1,22 @@
+include "Buildfile.defs";
+
+var object_dir			$=	libjr/jr_malloc
+var proj_cflags			$=	-Dis_libjr_build
+
+var target_libs			$=	libjr
+var target_progs		$=	tst_mem tst_bnds tst_pfxb tst_pre
+
+var link_libs			$=	libjr
+var link_args			$=
+
+var source_list			$=	jr_malloc.c jr_exit.c jr_strdup.c \
+							filediag.c memdiag.c memdup.c mempre.c memstats.c \
+							jr_new.cpp 
+
+
+jr_add_lib_default_rules	(target_progs, target_libs, proj_cflags, object_dir, COMPILE_STYLE);
+
+jr_add_lib_rule				("libjr", source_list, COMPILE_STYLE);
+
+release :
+	jr_mkrelease -d -C $(HOME) -o $(JR_TAR_DIR) -f ReleaseFiles.txt -v 1.1 jr_malloc

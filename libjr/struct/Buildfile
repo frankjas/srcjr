@@ -1,0 +1,33 @@
+include "Buildfile.defs";
+
+var object_dir			$=	libjr/struct
+var proj_cflags			$=
+
+var link_libs			$=	libjr
+var link_args			$=
+
+
+var target_libs			$=	libjr 
+var target_progs		$=	tst_attm tst_lbuf tst_cbuf tst_ibuf \
+							tst_heap tst_bset tst_iset
+
+var sources				$=	att_list.c att_mngr.c \
+							circbuf.c inputbuf.c linebuf.c \
+							bitset.c bitsetpn.c intset.c \
+							jr_heap.c \
+							jr_long.c jr_ulong.c \
+							net_flt.c net_dbl.c net_type.c \
+							ptrmap.c strtab.c
+
+
+jr_add_lib_default_rules	(target_progs, target_libs, proj_cflags, object_dir, COMPILE_STYLE);
+
+jr_add_lib_rule			("libjr",		sources,		COMPILE_STYLE);
+
+jr_add_prog_rule			("tst_attm", "tst_attm.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_lbuf", "tst_lbuf.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_cbuf", "tst_cbuf.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_ibuf", "tst_ibuf.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_heap", "tst_heap.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_bset", "tst_bset.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_iset", "tst_iset.c", link_libs, link_args, COMPILE_STYLE);

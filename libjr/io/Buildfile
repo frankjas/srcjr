@@ -1,0 +1,39 @@
+include "Buildfile.defs";
+
+var object_dir			$=	libjr-io
+var proj_cflags			$=
+
+var target_libs			$=	libjr libjr-inet
+var target_progs		$=	tst_io
+
+
+var link_libs			$=	libjr
+var link_args			$=
+
+var jr_sources			$=	bufio.c bufio_apr.c copyfp.c http_lib.c \
+							jr_fgets.c jr_tar.c \
+							lineone.c logfile.c loglib.c memfile.c \
+							readfile.c paragrph.c pathdb.c prn_data.c \
+
+var inet_sources		$=	mailhost.c maillib.c mailtime.c url_lib.c
+
+if (HAS_MS_CC) {
+	jr_sources			$-=	jr_tar.c logfile.c loglib.c memfile.c paragrph.c pathdb.c
+	inet_sources		$= 
+}
+if (jr_OS_TYPE == "cygwin") {
+	jr_sources			$-= jr_tar.c
+	inet_sources		$= url_lib.c
+}
+
+jr_add_lib_default_rules	(target_progs, target_libs, proj_cflags, object_dir, COMPILE_STYLE);
+
+jr_add_lib_rule			("libjr", jr_sources, COMPILE_STYLE);
+jr_add_lib_rule			("libjr-inet", inet_sources, COMPILE_STYLE);
+jr_add_prog_rule		("tst_io", "tst_io.c", link_libs, link_args, COMPILE_STYLE);
+
+
+
+testpar1 testpar2 testpar3 testpar4 testpar5 :
+	"cd testpara ; make $.TARGET"
+

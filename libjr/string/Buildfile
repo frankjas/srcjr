@@ -1,0 +1,40 @@
+include "Buildfile.defs";
+
+var object_dir			$=	libjr/string
+var proj_cflags			$=
+
+var link_libs			$=	libjr
+var link_args			$=
+
+var target_libs			$=	libjr
+var target_progs		$=	tst_env tst_esc tst_scan tst_vect tst_vio
+
+var sources				$=	ccnt.c cremove.c creplace.c \
+							ctlstrc.c ctltoesc.c esctoctl.c endword.c \
+							envget.c envpathx.c envset.c remdupl.c \
+							isident.c isdigits.c isstring.c \
+							jr_glob.c \
+							lcase.c memrepl.c pathtail.c \
+							sgetline.c skip.c strnchr.c struquot.c substrix.c subvect.c \
+							ttyname.c \
+							url_str.c vector.c \
+							vdeclare.c vwordsip.c vwords.c vsigsepi.c vsigsep.c vquote.c \
+							vlsout.c vectorio.c
+
+var unix_sources		$=	jr_regex.c scanf.c 
+
+
+if (!HAS_MS_CC) {
+	sources				$=	$sources $unix_sources
+}
+
+jr_add_lib_default_rules	(target_progs, target_libs, proj_cflags, object_dir, COMPILE_STYLE);
+
+jr_add_lib_rule			("libjr",		sources, COMPILE_STYLE);
+
+jr_add_prog_rule			("tst_env",		"tst_env.c",	link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_esc",		"tst_esc.c",	link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_scan",	"tst_scan.c",	link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_vect",	"tst_vect.c",	link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_vio",		"tst_vio.c",	link_libs, link_args, COMPILE_STYLE);
+

@@ -1,0 +1,118 @@
+include "Buildfile.defs";
+
+var object_dir			$=	libjr/syscalls
+var proj_cflags			$=
+
+var target_libs			$=	libjr
+var target_progs		$=	tst_prel tst_pw tst_symt tst_invk tst_time
+
+var link_libs			$=	libjr
+var link_args			$=
+
+var sources				$=	async_fn.c async_io.c copyfd.c fd_lock.c \
+							chkpass.c critical.c exitstr.c \
+							envtilde.c globvec.c pathsrch.c \
+							invkfilt.c invoke.c isdir.c isinput.c \
+							jr_apr.c jr_aprbuf.c jr_aprglob.c \
+							jr_canon.c jr_chdir.c jr_chmod.c jr_chown.c \
+							jr_epoll.c jr_errno.c jr_exec.c jr_file.c jr_flock.c \
+							jr_getpid.c jr_getcwd.c jr_hostname.c jr_mkdir.c jr_mktmp.c jr_noapr.c \
+							jr_password.c jr_perms.c jr_poll.c jr_pool.c jr_popen.c jr_process.c \
+							jr_sleep.c jr_socket.c jr_stat.c jr_symlink.c \
+							jr_tape.c jr_thread.c jr_time.c jr_timestr.c jr_tty.c jr_unlink.c jr_user.c \
+							login.c modtime.c move.c nblk_io.c \
+							pathabs.c pathrel.c opendir.c remove.c \
+							safecopy.c size.c sighndlr.c signame.c \
+							termctrl.c timedio.c timelock.c tmpdir.c tmpfile.c touch.c \
+							username.c which.c
+
+if (HAS_MS_CC) {
+	sources				$-=	async_fn.c async_io.c copyfd.c fd_lock.c \
+							chkpass.c critical.c exitstr.c \
+							envtilde.c globvec.c pathsrch.c \
+							invkfilt.c invoke.c isinput.c \
+							jr_canon.c jr_chmod.c jr_chown.c jr_getcwd.c \
+							jr_epoll.c \
+							jr_perms.c jr_popen.c jr_symlink.c \
+							jr_tape.c jr_tty.c \
+							logfile.c loglib.c \
+							login.c modtime.c move.c nblk_io.c \
+							pathabs.c pathrel.c opendir.c remove.c \
+							safecopy.c size.c sighndlr.c \
+							termctrl.c timedio.c timelock.c touch.c \
+							username.c which.c
+
+	sources				$+=	jr_mutex_ms.c
+}
+else {
+	sources				$+=	jr_mutex_unix.c jr_socket_unix.c
+}
+
+if (jr_OS_TYPE == "cygwin") {
+	sources				$-=	async_fn.c async_io.c chkpass.c jr_epoll.c which.c
+}
+
+var aprutil_src_list	$=	apr_base64.c apr_md5.c apr_passwd.c apr_sha1.c \
+							crypt_blowfish.c getuuid.c uuid.c xlate.c
+var apriconv_src_list	$=	iconv.c iconv_uc.c iconv_ces.c iconv_module.c iconv_int.c
+
+jr_add_lib_default_rules	(target_progs, target_libs, proj_cflags, object_dir, COMPILE_STYLE);
+
+jr_add_lib_rule				("libjr", sources, COMPILE_STYLE);
+
+jr_add_prog_rule			("tst_invk",	"tst_invk.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_prel",	"tst_prel.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_pw",		"tst_pw.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_time",	"tst_time.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_glob",	"tst_glob.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_whch",	"tst_whch.c", link_libs, link_args, COMPILE_STYLE);
+
+var libjr_file				= jr_get_lib_file ("libjr", COMPILE_STYLE);
+var libapr_obj_dir			= jr_get_abs_object_dir ("$object_dir-apr", COMPILE_STYLE);
+
+clean : clean_apr
+
+clean_apr :
+	jr_remove_dirs ($libapr_obj_dir)
+
+$libjr_file : $libapr_obj_dir
+	
+$libapr_obj_dir : $LIBAPR_PATH $LIBAPRUTIL_PATH
+	var libjr_path		= jr_get_lib_path (libjr_file, COMPILE_STYLE);
+	var obj_list;
+
+	jr_remove_dirs ($libapr_obj_dir)
+	jr_mkdir ($libapr_obj_dir)
+
+	.PATH = "$.PATH;$libapr_obj_dir";
+
+	if (HAS_MS_CC) {
+
+		directory $LIBAPR_PATH:h {
+			cp *.obj $libapr_obj_dir
+		}
+		directory $LIBAPRUTIL_PATH:h {
+			obj_list	= jr_get_obj_list ($aprutil_src_list);
+			cp $obj_list $libapr_obj_dir
+		}
+		directory $LIBAPRICONV_PATH:h {
+			obj_list	= jr_get_obj_list ($apriconv_src_list);
+			cp $obj_list $libapr_obj_dir
+		}
+		directory $libapr_obj_dir {
+			obj_list	= `ls`
+			jr_update_lib ($libjr_path, $obj_list);
+		}
+	}
+	else {
+		directory $libapr_obj_dir {
+
+			obj_list	= jr_list_lib ($LIBAPR_PATH);
+			jr_extract_lib ($LIBAPR_PATH, $obj_list)
+			jr_update_lib ($libjr_path, $obj_list);
+
+			obj_list	= jr_get_obj_list ($aprutil_src_list);
+			jr_extract_lib ($LIBAPRUTIL_PATH, $obj_list)
+			jr_update_lib ($libjr_path, $obj_list);
+		}
+	}

@@ -1,0 +1,30 @@
+include "Buildfile.defs";
+
+var object_dir			$=	libjr/missing
+var proj_cflags			$=
+
+var link_libs			$=	libjr
+var link_args			$=
+
+
+var target_libs			$=	libjr
+var target_progs		$=	tst_std tst_psx
+
+
+var libc_sources	  	$=	memcpy.c memmove.c memset.c noinfo.c regex.c \
+							setvbuf.c strccmp.c strnccmp.c strchr.c strdup.c strrchr.c strstr.c \
+							flock.c
+
+var posix_sources		$=	backtrace.c dup2.c pathconf.c rewinddir.c setsid.c sigaction.c \
+							siglist.c sigprocmask.c sigset.c sigsuspend.c sysconf.c \
+							tcpgrp.c waitpid.c setpgid.c getpw.c getuid.c \
+							getcwd.c putenv.c xdr_float.c xdr_mem.c
+
+
+jr_add_lib_default_rules	(target_progs, target_libs, proj_cflags, object_dir, COMPILE_STYLE);
+
+jr_add_lib_rule				("libjr",		libc_sources,		COMPILE_STYLE);
+jr_add_lib_rule				("libjr",		posix_sources,		COMPILE_STYLE);
+
+jr_add_prog_rule			("tst_psx", "tst_psx.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_std", "tst_std.c", link_libs, link_args, COMPILE_STYLE);

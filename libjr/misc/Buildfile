@@ -1,0 +1,42 @@
+include "Buildfile.defs";
+
+var object_dir			$=	libjr/misc
+var proj_cflags			$=
+
+var link_libs			$=	libjr-test libjr
+var link_args			$=
+
+
+var target_libs			$=	libjr libjr-esis libjr-test
+var target_progs		$=	tst_attm tst_lbuf tst_cbuf tst_ibuf \
+							tst_trac tst_msct tst_rusg tst_exn tst_heap
+
+var jr_sources			$=	binsrch.c bktrace.c crcsum.c \
+							cmpalwys.c cmpfilnm.c cmpint.c cmpmisc.c \
+							cmpshort.c cmpstrss.c cmpstrqs.c \
+							coredump.c  exceptn.c exn_brk.c freeref.c geometry.c \
+							hashint.c hashptr.c hashshrt.c hashstr.c heapbase.c intstr.c \
+							jr_base64.c jr_bswap.c jr_error.c jr_iferr.c \
+							jr_mime.c jr_rand.c jr_uuid.c jr_uuidc.c \
+							linsrch.c pslib.c shortstr.c \
+							memscoot.c memswtch.c \
+							next2pow.c \
+							pfx_init.c pfx_lib.c \
+							tabstops.c trace.c tracevar.c
+
+var esis_sources		$=	esis_io.cpp esis_grv.cpp esis_lib.c esis_typ.c 
+
+var test_sources		$=	tstshell.c 
+
+
+jr_add_lib_default_rules	(target_progs, target_libs, proj_cflags, object_dir, COMPILE_STYLE);
+
+jr_add_lib_rule				("libjr",		jr_sources,		COMPILE_STYLE);
+jr_add_lib_rule				("libjr-esis",	esis_sources,	COMPILE_STYLE);
+jr_add_lib_rule				("libjr-test",	test_sources,	COMPILE_STYLE);
+
+jr_add_prog_rule			("tst_trac", "tst_trac.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_msct", "tst_msct.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_rusg", "tst_rusg.c", link_libs, link_args, COMPILE_STYLE);
+jr_add_prog_rule			("tst_exn",  "tst_exn.c",  link_libs, link_args, COMPILE_STYLE);
+

@@ -1,0 +1,23 @@
+include "Buildfile.defs";
+
+var object_dir			$=	libjr/replace
+var proj_cflags			$=
+
+var link_libs			$=	libjr
+var link_args			$=
+
+
+var target_libs			$=	libjr
+var target_progs		$=	tst_std tst_psx
+
+
+var libc_sources	  	$=	getenv.c inet_ntoa.c
+
+var posix_sources		$=	getpgrp.c
+
+
+jr_add_lib_default_rules	(target_progs, target_libs, proj_cflags, object_dir, COMPILE_STYLE);
+
+jr_add_lib_rule			("libjr",	libc_sources,	COMPILE_STYLE);
+jr_add_lib_rule			("libjr",	posix_sources,	COMPILE_STYLE);
+

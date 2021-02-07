@@ -1,0 +1,18 @@
+include "Buildfile.defs";
+
+var object_dir			$=	libjr-symtab
+var proj_cflags			$=
+
+var target_libs			$=	libjr-symtab
+var target_progs		$=	tst_symt
+
+var link_libs			$=	libjr-symtab libjr
+var link_args			$=
+
+var source_list			$=	st_init.c st_lib.c st_list.c st_prnt.c st_type.c
+
+jr_add_lib_default_rules	(target_progs, target_libs, proj_cflags, object_dir, COMPILE_STYLE);
+
+jr_add_lib_rule			("libjr-symtab", source_list, COMPILE_STYLE);
+jr_add_prog_rule		("tst_symt", "tst_symt.c", link_libs, link_args, COMPILE_STYLE);
+

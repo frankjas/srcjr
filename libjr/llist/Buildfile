@@ -1,0 +1,18 @@
+include "Buildfile.defs";
+
+var object_dir			$=	libjr/llist
+var proj_cflags			$=
+
+var target_libs			$=	libjr
+var target_progs		$=	tst_llst
+var link_libs			$=	libjr
+var link_args			$=
+
+var source_list			$=	llist.c llistadd.c llistcmp.c llistcpy.c \
+							llistfnd.c llistmrg.c llistpfx.c
+
+jr_add_lib_default_rules	(target_progs, target_libs, proj_cflags, object_dir, COMPILE_STYLE);
+
+jr_add_lib_rule			("libjr", source_list, COMPILE_STYLE);
+jr_add_prog_rule			("tst_llst", "tst_llst.c", link_libs, link_args, COMPILE_STYLE);
+
