@@ -1,0 +1,18 @@
+include $(ROOT_PATH)/Makefile.globals
+
+VPATH			= $(CURDIR)
+
+LINK_LIBS		= jr
+LINK_ARGS		=
+ 
+LIBRARY			= $(VENDOR_LIB_DIR)/libjr
+
+C_SOURCES		= $(wildcard *.c)
+CPP_SOURCES		= $(wildcard *.cpp)
+SOURCES			= $(C_SOURCES) $(CPP_SOURCES)
+
+OBJECT_DIR		= $(VENDOR_OBJ_DIR)/$(PROJECT_DIR)
+
+default: setup $(LIBRARY).$(LIBEXT)
+
+include $(ROOT_PATH)/Makefile.build

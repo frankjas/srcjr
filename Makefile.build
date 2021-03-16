@@ -1,0 +1,95 @@
+
+ifeq ($(PLATFORM_BUILD_NAME), win)
+	LIBPATH_ARG		= -LIBPATH:$(BUILD_LIB_DIR) -LIBPATH:$(VENDOR_LIB_DIR)
+	#
+	# 3-29-2011: Rename Unix 3rdparty library names to match Windows build of those packages.
+	#
+	WIN_LINK_LIBS	:= $(LINK_LIBS)
+
+	#
+	# 3-29-2011: Add "lib" prefix, ".lib" suffix, but note:
+	# gtest is gtest.lib, sqlite3 is sqlite3.lib, ssleay32, etc.
+	# so adjust those names after.
+	#
+	WIN_LIB_ARGS	:= $(foreach lib,$(WIN_LINK_LIBS),lib$(lib).$(LIBEXT))
+	
+	WIN_LIB_ARGS	:= $(subst libaprutil-1.lib,aprutil-1.lib,$(WIN_LIB_ARGS))
+	WIN_LIB_ARGS	:= $(subst libapr-1.lib,apr-1.lib,$(WIN_LIB_ARGS))
+
+	WIN_LIB_ARGS	+= $(foreach lib,$(EXTRA_WIN_LIBS),$(lib).lib)
+
+	LINK_ARGS		+= -link $(EXTRA_LD_FLAGS) -debug $(LIBPATH_ARG) $(WIN_LIB_ARGS) $(ENV_LINK_ARGS)
+else
+	#
+	# 3-29-2011: Add "lib" prefix, ".a" suffix
+	#
+	LINK_LIB_FLAGS	= $(foreach lib,$(LINK_LIBS) $(EXTRA_LIBS), -l$(lib))
+	LINK_ARGS		+= $(EXTRA_LD_FLAGS) -L$(BUILD_LIB_DIR) -L$(VENDOR_LIB_DIR) $(LINK_LIB_FLAGS)
+	LINK_ARGS		+= $(ENV_LINK_ARGS)
+endif
+
+
+ifeq ($(PLATFORM_BUILD_NAME),mac)
+	#
+	# 4-1-2011: OSX linker can't handle -o/path/to/executable
+	#
+	LINK_OUT_ARG	= $(OEFLAG) $@
+else
+	#
+	# 4-1-2011: Windows needs the flag and argument adjacent,
+	# gcc's linker can deal with either space or not.
+	#
+	LINK_OUT_ARG	= $(OEFLAG)$@
+endif
+
+OBJECTS		:= $(SOURCES)
+OBJECTS		:= $(OBJECTS:.cpp=.$(OBJEXT))
+OBJECTS		:= $(OBJECTS:.cc=.$(OBJEXT))
+OBJECTS		:= $(OBJECTS:.c=.$(OBJEXT))
+OBJECTS		:= $(OBJECTS:.rc=.res)
+
+OBJECTS		:= $(addprefix $(OBJECT_DIR)/,$(OBJECTS))
+
+setup : $(BUILD_BIN_DIR) $(BUILD_LIB_DIR) $(OBJECT_DIR)
+
+$(EXECUTABLE) :: $(OBJECT_DIR) $(OBJECTS)
+	$(CC) $(OBJECTS) $(LINK_OUT_ARG) $(LINK_ARGS)
+
+$(LIBRARY).$(LIBEXT) :: $(OBJECTS)
+	$(AR) $(ARFLAGS) $(AROFLAG)$@ $^
+
+.SUFFIXES: 
+.SUFFIXES: .c .cpp .cc .$(OBJEXT)
+
+.SUFFIXES: .tch
+.c.tch:    ; rm -f $(OBJECT_DIR)/$*.$(OBJEXT)
+.cpp.tch:  ; rm -f $(OBJECT_DIR)/$*.$(OBJEXT)
+
+$(BUILD_BIN_DIR) :
+	mkdir -p $@
+
+$(BUILD_LIB_DIR) :
+	mkdir -p $@
+
+$(OBJECT_DIR) :
+	mkdir -p $@
+
+$(OBJECT_DIR)/%.$(OBJEXT) : %.cc
+	$(CC) -c $(CPPFLAGS) $< $(OFLAG)$@
+
+$(OBJECT_DIR)/%.$(OBJEXT) : %.cpp
+	$(CC) -c $(CPPFLAGS) $< $(OFLAG)$@
+
+$(OBJECT_DIR)/%.$(OBJEXT) : %.c
+	$(POC) -c $(CFLAGS) $< $(OFLAG)$@
+
+$(OBJECT_DIR)/%.$(RESEXT) :: %.rc
+	RC.exe -nologo -D _UNICODE -D UNICODE -l"0x0409" $(INCLUDES:-I=-i) $(RC_INCLUDES) $(OFLAG)$@ $<
+
+clean:: rmtargets
+
+rmtargets::
+	rm -rf $(OBJECT_DIR) $(TARGET_PROGRAMS) $(TARGET_ARCHIVES)
+	if [ "$(LIBRARY).$(LIBEXT)" != ".$(LIBEXT)" ] ; then rm -f $(LIBRARY).$(LIBEXT) ; fi
+
+verify::

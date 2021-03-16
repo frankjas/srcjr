@@ -1,0 +1,157 @@
+PLATFORM_NAME		= $(shell uname)
+PLATFORM_VER		= $(shell uname -r)
+PLATFORM_ARCH		= $(shell uname -m)
+
+JR_BUILD_ROOT		?= $(ROOT_PATH)/build-$(PLATFORM_NAME)-$(PLATFORM_ARCH)
+
+VENDOR_BUILD_ROOT	= $(JR_BUILD_ROOT)/vendor
+
+BUILD_ARCH			?=
+
+ifeq ($(BUILD_ARCH),)
+	BUILD_ARCH		= $(PLATFORM_ARCH)
+endif
+
+ifeq (Darwin,$(PLATFORM_NAME))
+	PLATFORM_BUILD_NAME	?= mac
+else ifeq ($(findstring CYGWIN,$(PLATFORM_NAME)), CYGWIN)
+	PLATFORM_BUILD_NAME	?= win
+else
+	PLATFORM_BUILD_NAME	?= linux
+endif
+
+ifeq ($(PLATFORM_BUILD_NAME), win)
+	LIBEXT			= lib
+	OBJEXT			= obj
+	RESEXT			= res
+	OFLAG			= -Fo
+	OEFLAG			= -Fe
+	AROFLAG			= -out:
+	AR				= lib.exe
+	ARFLAGS			= -nologo
+	CC				= cl.exe
+	POC				?= $(CC)
+
+	BUILD_BIN_DIR	= $(shell cygpath -m $(JR_BUILD_ROOT)/bin)
+	BUILD_OBJ_DIR	= $(shell cygpath -m $(JR_BUILD_ROOT)/objects)
+	BUILD_LIB_DIR	= $(shell cygpath -m $(JR_BUILD_ROOT)/lib)
+
+	VENDOR_INC_DIR	= $(shell cygpath -m $(VENDOR_BUILD_ROOT)/include)
+	VENDOR_BIN_DIR	= $(shell cygpath -m $(VENDOR_BUILD_ROOT)/bin)
+	VENDOR_LIB_DIR	= $(shell cygpath -m $(VENDOR_BUILD_ROOT)/lib)
+	VENDOR_OBJ_DIR	= $(shell cygpath -m $(VENDOR_BUILD_ROOT)/objects)
+
+	JR_INC_DIR		= $(shell cygpath -m $(ROOT_PATH)/include)
+	
+	VENDOR_JS_DIR	= $(shell cygpath -m $(VENDOR_BUILD_ROOT)/javascript)
+	VENDOR_CSS_DIR	= $(shell cygpath -m $(VENDOR_BUILD_ROOT)/css)
+	VENDOR_IMG_DIR	= $(shell cygpath -m $(VENDOR_BUILD_ROOT)/images)
+	#
+	# 4-15-2011: use -MT and clear VS_NO_DEFAULT for non-debug build
+	#
+	VS_RUNTIME_FLAG	= -MT
+
+	CL_FLAGS		+= -MT -EHsc -nologo -DWIN32
+ifneq ($(JR_DO_DEBUG),)
+	CL_FLAGS		+= -ZI -Od -DDEBUG
+endif
+	CL_FLAGS		+= -W4 -WX -wd4100 -wd4127 -wd4131 -wd4220 -wd4244 -wd4702 -wd4706 -wd4512 -wd4201
+	# wd4100	- unreferences formal parameter
+	# wd4127	- cond. expression is constant, i.e.: if (0) {...}
+	# wd4131	- disable "uses old-style declarator"
+	# wd4220	- varargs matches remaining parameters (htable.c:23)
+	# wd4244	- conversion from "long double" to "double"
+	# wd4702	- unreachable code
+	# wd4706	- assignment within conditional expression
+	# wd4512	- assignment operator could not be generated
+	# wd4201	- nonstandard extension used : nameless struct/union
+
+	CFLAGS		= $(CL_FLAGS) $(INCLUDES) $(ENV_CFLAGS) $(PLATFORM_DEFINES)
+	CPPFLAGS	= $(CFLAGS)
+
+	EXTRA_LD_FLAGS	= -nologo
+
+ifneq ($(JR_DO_DEBUG),)
+	EXTRA_LD_FLAGS	+= -DEBUG -nodefaultlib:libcmtd
+endif
+	# removing non-platform libraries from this list
+	EXTRA_WIN_LIBS	= user32 Rpcrt4 advapi32 gdi32 ws2_32 shell32 Iphlpapi
+
+	#	3-30-2011: other libraries that may be needed:
+	#	shlwapi.lib winmm.lib mpr.lib userenv.lib kernel32.lib
+	#
+	#	5-25-2011: apr-1 requires: ws2_32 shell32
+	#	6-27-2011: aprutil-1 requires rpcrt4 (for UuidCreate)
+	#	6-27-2011: Iphlpapi for IP address manipulations in Bonjour
+	# EXTRA_WIN_LIBS	= user32 Rpcrt4 advapi32 gdi32 ws2_32 shell32 Iphlpapi
+
+else
+	LIBEXT			= a
+	OBJEXT			= o
+	OFLAG			= -o
+	OEFLAG			= -o
+	AROFLAG			=
+	AR				= ar
+	ARFLAGS			= ru
+	CPP				= g++
+	CC				= gcc
+	POC				?= $(CC)
+
+	BUILD_BIN_DIR	= $(JR_BUILD_ROOT)/bin
+	BUILD_OBJ_DIR	= $(JR_BUILD_ROOT)/objects
+	BUILD_LIB_DIR	= $(JR_BUILD_ROOT)/lib
+
+	VENDOR_INC_DIR	= $(VENDOR_BUILD_ROOT)/include
+	VENDOR_BIN_DIR	= $(VENDOR_BUILD_ROOT)/bin
+	VENDOR_LIB_DIR	= $(VENDOR_BUILD_ROOT)/lib
+	VENDOR_OBJ_DIR	= $(VENDOR_BUILD_ROOT)/objects
+
+	JR_INC_DIR	= $(ROOT_PATH)/include
+
+	VENDOR_JS_DIR	= $(VENDOR_BUILD_ROOT)/javascript
+	VENDOR_CSS_DIR	= $(VENDOR_BUILD_ROOT)/css
+	VENDOR_IMG_DIR	= $(VENDOR_BUILD_ROOT)/images
+
+ifeq (Darwin,$(PLATFORM_NAME))
+
+	#
+	# ENV_ARCH_FLAGS should be "-arch i386"
+	#
+	PTHREAD_ARG		=
+	EXTRA_LD_FLAGS	= $(ENV_LINK_ARGS) $(ENV_ARCH_FLAGS) -Wl,-search_paths_first 
+	EXTRA_LIBS		=
+	#
+	# 2-9-2011: w/o -search_paths_first the OSX .dylib files will be linked first.
+	# We want to link our .a static archives.
+	#
+else
+	PTHREAD_ARG		= -pthread
+	EXTRA_LD_FLAGS	= $(ENV_LINK_ARGS) $(ENV_ARCH_FLAGS)
+	EXTRA_LIBS		=
+
+	#
+	# 2-2-2011: libevent on linux needs -lrt for clock_gettime
+	# -ldl for dlopen,  EXTRA_LIBS		= rt uuid dl
+	#
+endif
+
+	GCC_FLAGS		+= -g -O0 $(ENV_ARCH_FLAGS) $(INCLUDES)
+	GCC_FLAGS		+= -Wall -Werror -Wextra -Wno-unused-parameter -Wno-parentheses
+	GCC_FLAGS		+= -Wno-unused-function
+	CFLAGS			= $(GCC_FLAGS) -Wno-main $(ENV_CFLAGS) $(PLATFORM_DEFINES)
+	CPPFLAGS		= $(GCC_FLAGS)
+	# 7-22-11: on OSX -Wno-main gives a warning with g++
+
+endif
+
+INCLUDES		= -I$(JR_INC_DIR) -I$(VENDOR_INC_DIR)
+
+#
+# 2-9-2011: Directory specific variables.
+# PROJ_DIR contains the path components following ROOT_PATTERN
+#
+PROJECT_DIR		= $(word 2,$(subst $(ROOT_PATTERN), ,$(CURDIR)))
+OBJECT_DIR		= $(BUILD_OBJ_DIR)/$(PROJECT_DIR)
+PROJECT_SCRATCH_DIR	= $(BUILD_OBJ_DIR)/scratch$(PROJECT_DIR)
+
+JR_PYTHON_ROOT	= $(BUILD_LIB_DIR)/python
