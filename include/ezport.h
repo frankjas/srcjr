@@ -21,6 +21,11 @@ extern "C" {
 #	ifndef ostype_linux
 #	define ostype_linux
 #	endif
+
+#	define _GNU_SOURCE	1
+
+#	define missing_wifcore_macro
+#	define missing_msghdr_accrights_fields
 #endif
 
 #ifdef __APPLE__
