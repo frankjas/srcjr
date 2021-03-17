@@ -137,7 +137,7 @@ endif
 
 	GCC_FLAGS		+= -g -O0 $(ENV_ARCH_FLAGS) $(INCLUDES)
 	GCC_FLAGS		+= -Wall -Werror -Wextra -Wno-unused-parameter -Wno-parentheses
-	GCC_FLAGS		+= -Wno-unused-function
+	GCC_FLAGS		+= -Wno-unused-function -Wno-implicit-fallthrough
 	CFLAGS			= $(GCC_FLAGS) -Wno-main $(ENV_CFLAGS) $(PLATFORM_DEFINES)
 	CPPFLAGS		= $(GCC_FLAGS)
 	# 7-22-11: on OSX -Wno-main gives a warning with g++
