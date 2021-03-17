@@ -12,8 +12,24 @@ extern "C" {
 
 
 #ifdef WIN32
+#	ifndef ostype_winnt
 #	define ostype_winnt
+#	endif
+#endif
 
+#ifdef __linux
+#	ifndef ostype_linux
+#	define ostype_linux
+#	endif
+#endif
+
+#ifdef __APPLE__
+#	ifndef ostype_macosx
+#	define ostype_macosx
+#	endif
+#endif
+
+#ifdef ostype_winnt
 #	if (_MSC_VER <= 1400)
 #		define missing_tar_h
 #		define missing_crypt_extern
@@ -74,15 +90,13 @@ extern "C" {
 #	include "jr/ezport/microsoft.h"
 #endif
 
-#ifdef __linux
-#	define ostype_linux
+#ifdef ostype_linux
 #	ifdef _POSIX_SOURCE
 #		define missing_strcasestr
 #	endif
 #endif
 
-#ifdef __APPLE__
-#	define ostype_macosx
+#ifdef ostype_macosx
 #	define missing_strcasecmp_extern
 #endif
 
@@ -111,7 +125,7 @@ extern "C" {
  * for that problem (see jr/ezport/missing.h for
  * an example).
  *
- * You may want to look through jr/ezport.h or jr/ezport/*
+ * You may want to look through jr/ezport/ files
  * since the problem you encountered may already
  * have a solution provided by JR International.
  */
